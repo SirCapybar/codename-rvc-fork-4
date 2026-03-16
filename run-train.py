@@ -23,7 +23,9 @@ def parse_args():
         required=True,
     )
     parser.add_argument("-e", "--epochs", type=int, help="Epoch count")
-    parser.add_argument("-b", "--batch-size", type=int, help="Batch size")
+    parser.add_argument(
+        "-b", "--batch-size", type=int, help="Batch size", required=True
+    )
     parser.add_argument(
         "-f",
         "--epoch-save-frequency",
@@ -100,8 +102,6 @@ def parse_args():
     if args.train:
         if not args.epochs:
             parser.error("-e/--epochs must be provided for training")
-        if not args.batch_size:
-            parser.error("-b/--batch-size must be provided for training")
         if not args.epoch_save_frequency:
             parser.error("-f/--epoch-save-frequency must be provided for training")
     if args.restore_dir and not os.path.isdir(args.restore_dir):
