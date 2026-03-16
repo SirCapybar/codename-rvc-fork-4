@@ -201,7 +201,7 @@ def main():
         p.check_returncode()
     if args.zip:
         logging.info("Zipping...")
-        shutil.make_archive(logs_path + ".zip", "zip", logs_path)
+        shutil.make_archive(logs_path, "zip", logs_path)
     logging.info("Done!")
 
 
