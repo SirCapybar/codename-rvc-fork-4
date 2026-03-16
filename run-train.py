@@ -137,7 +137,7 @@ def main():
             "--dataset_path",
             args.dataset,
             "--sample_rate",
-            args.sample_rate,
+            str(args.sample_rate),
         ]
         logging.info("Preprocessing...")
         p = subprocess.run(cmd_preprocess)
@@ -148,7 +148,7 @@ def main():
             "--model_name",
             model,
             "--sample_rate",
-            args.sample_rate,
+            str(args.sample_rate),
             "--gpu",
             args.gpu,
         ]
@@ -156,7 +156,7 @@ def main():
         p = subprocess.run(cmd_extract)
         p.check_returncode()
     if args.index:
-        cmd_index = CMD_BASE + ["index", "--model_name"]
+        cmd_index = CMD_BASE + ["index", "--model_name", model]
         logging.info("Generating index...")
         p = subprocess.run(cmd_index)
         p.check_returncode()
@@ -166,14 +166,14 @@ def main():
             "--model_name",
             model,
             "--epoch_save_frequency",
-            args.epoch_save_frequency,
+            str(args.epoch_save_frequency),
             "--total_epoch_count",
-            args.epochs,
+            str(args.epochs),
             "--sample_rate",
-            args.sample_rate,
+            str(args.sample_rate),
             "--save_only_latest_net_models=True",
             "--batch_size",
-            args.batch_size,
+            str(args.batch_size),
         ]
         if args.pretrain_g:
             G_PATH = "pretrain_G.pth"
