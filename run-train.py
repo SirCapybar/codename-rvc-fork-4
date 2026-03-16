@@ -128,6 +128,15 @@ def main():
             shutil.rmtree(logs_path)
         logging.info(f"Restoring directory '{args.restore_dir}'...")
         shutil.copytree(args.restore_dir, logs_path)
+    if args.train and args.pretrain_g:
+        G_PATH = "pretrain_G.pth"
+        D_PATH = "pretrain_D.pth"
+        logging.info("Downloading custom generator...")
+        p = subprocess.run(["wget", "-O", G_PATH, args.pretrain_g])
+        p.check_returncode()
+        logging.info("Downloading custom discriminator...")
+        p = subprocess.run(["wget", "-O", D_PATH, args.pretrain_d])
+        p.check_returncode()
     CMD_BASE = ["uv", "run", "core.py"]
     if args.preprocess:
         cmd_preprocess = CMD_BASE + [
@@ -176,8 +185,6 @@ def main():
             str(args.batch_size),
         ]
         if args.pretrain_g:
-            G_PATH = "pretrain_G.pth"
-            D_PATH = "pretrain_D.pth"
             cmd_train += [
                 "--custom_pretrained=True",
                 "--g_pretrained_path",
@@ -185,12 +192,6 @@ def main():
                 "--d_pretrained_path",
                 D_PATH,
             ]
-            logging.info("Downloading custom generator...")
-            p = subprocess.run("wget", "-O", G_PATH, args.pretrain_g)
-            p.check_returncode()
-            logging.info("Downloading custom discriminator...")
-            p = subprocess.run("wget", "-O", D_PATH, args.pretrain_d)
-            p.check_returncode()
         logging.info("Training...")
         p = subprocess.run(cmd_train)
         p.check_returncode()
