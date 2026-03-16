@@ -45,6 +45,12 @@ def parse_args():
         default="post_rms",
     )
     parser.add_argument(
+        "-z",
+        "--zip",
+        action="store_true",
+        help="If set, the output directory will be zipped at the end",
+    )
+    parser.add_argument(
         "--nh",
         "--no-high-pass",
         dest="high_pass",
@@ -189,6 +195,9 @@ def main():
         logging.info("Training...")
         p = subprocess.run(cmd_train)
         p.check_returncode()
+    if args.zip:
+        logging.info("Zipping...")
+        shutil.make_archive(logs_path + ".zip", "zip", logs_path)
     logging.info("Done!")
 
 
