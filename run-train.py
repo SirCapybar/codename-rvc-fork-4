@@ -153,6 +153,8 @@ def main():
             str(args.sample_rate),
             "--normalization_mode",
             args.normalization_mode,
+            "--process_effects",
+            str(args.high_pass),
         ]
         logging.info("Preprocessing...")
         p = subprocess.run(cmd_preprocess)
