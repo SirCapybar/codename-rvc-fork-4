@@ -117,7 +117,7 @@ def main():
         datefmt="%H:%M:%S",
     )
     model = (
-        f"{args.name}_{args.sample_rate / 1000}k"
+        f"{args.name}_{args.sample_rate // 1000}k"
         + (f"_{args.normalization_mode}" if args.normalization_mode != "none" else "")
         + ("_nhp" if not args.high_pass else "")
     )
