@@ -151,6 +151,8 @@ def main():
             args.dataset,
             "--sample_rate",
             str(args.sample_rate),
+            "--normalization_mode",
+            args.normalization_mode,
         ]
         logging.info("Preprocessing...")
         p = subprocess.run(cmd_preprocess)
