@@ -117,8 +117,12 @@ def main():
         datefmt="%H:%M:%S",
     )
     model = (
-        f"{args.name}_{args.sample_rate // 1000}k"
-        + (f"_{args.normalization_mode}" if args.normalization_mode != "none" else "")
+        f"{args.name}_{args.sample_rate // 1000}k_{args.batch_size}b"
+        + (
+            f"_{args.normalization_mode}"
+            if args.normalization_mode != "post_rms"
+            else ""
+        )
         + ("_nhp" if not args.high_pass else "")
     )
     logs_path = os.path.realpath(os.path.join(os.path.dirname(__file__), "logs", model))
