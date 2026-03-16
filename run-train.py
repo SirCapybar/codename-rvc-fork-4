@@ -3,12 +3,11 @@ import logging
 import os
 import subprocess
 import shutil
-import sys
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument("-n", "--name", help="Model name", required=True)
+    parser.add_argument("name", help="Model name")
     parser.add_argument("-g", "--gpu", help="GPU device", default="0")
     parser.add_argument(
         "-d",
