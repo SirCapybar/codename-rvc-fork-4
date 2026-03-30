@@ -46,6 +46,9 @@ def parse_args():
         default="post_rms",
     )
     parser.add_argument(
+        "-m", "--mutes", type=int, default=2, help="Amount of silence clips"
+    )
+    parser.add_argument(
         "-z",
         "--zip",
         action="store_true",
@@ -168,6 +171,8 @@ def main():
             str(args.sample_rate),
             "--gpu",
             args.gpu,
+            "--include_mutes",
+            str(args.mutes),
         ]
         logging.info("Extracting...")
         p = subprocess.run(cmd_extract)
