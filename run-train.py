@@ -5,6 +5,10 @@ import subprocess
 import shutil
 
 
+def is_windows() -> bool:
+    return os.name == "nt"
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("name", help="Model name")
@@ -33,8 +37,14 @@ def parse_args():
         help="Epoch save frequency",
         default=10,
     )
-    parser.add_argument("-G", "--pretrain-g", help="Pretrain G model link")
-    parser.add_argument("-D", "--pretrain-d", help="Pretrain D model link")
+    parser.add_argument("-G", "--pretrain-g", help="Pretrain G model link or path")
+    parser.add_argument("-D", "--pretrain-d", help="Pretrain D model link or path")
+    parser.add_argument(
+        "-p",
+        "--pretrain",
+        help="Pretrain to download",
+        choices=["og", "lc1.5", "lc1.6", "klm"],
+    )
     parser.add_argument(
         "-r", "--restore-dir", help="If provided, this directory will be restored first"
     )
@@ -98,9 +108,13 @@ def parse_args():
                 "-d/--dataset must be provided for preprocess/extract/index step"
             )
     if args.pretrain_g or args.pretrain_d:
+        if args.pretrain:
+            parser.error(
+                "Pretrain G/D should not be provided when --pretrain is specified"
+            )
         if not args.pretrain_g or not args.pretrain_d:
             parser.error(
-                "If a custom pretrain is used, both G and D links should be provided"
+                "If a custom pretrain is used, both G and D should be provided"
             )
     if args.train:
         if not args.epochs:
@@ -110,6 +124,23 @@ def parse_args():
     if args.restore_dir and not os.path.isdir(args.restore_dir):
         parser.error(f"Restore directory '{args.restore_dir}' doesn't exist")
     return args
+
+
+def get_pretrain_links(pretrain: str, sample_rate: int) -> tuple:
+    if pretrain == "lc1.5":
+        g = f"https://huggingface.co/lyery/mode4/resolve/main/G_{(15 if sample_rate == 32000 else f'{sample_rate // 1000}k')}.pth?download=true"
+    elif pretrain == "lc1.6":
+        if sample_rate != 32000:
+            raise ValueError(
+                f"Sample rate {sample_rate} is not supported by pretrain {pretrain}"
+            )
+        g = "https://huggingface.co/lyery/legacy_core1.6/resolve/main/G_11.pth?download=true"
+    elif pretrain == "klm":
+        g = f"https://huggingface.co/SeoulStreamingStation/KLM_RVC_KLM-HF_Trainer/resolve/main/G_KLM_RVC_PT_{sample_rate // 1000}k.pth?download=true"
+    else:
+        raise ValueError(f"Unknown pretrain name: {pretrain}")
+    d = g.replace("/G_", "/D_")
+    return g, d
 
 
 def main():
@@ -135,16 +166,31 @@ def main():
             shutil.rmtree(logs_path)
         logging.info(f"Restoring directory '{args.restore_dir}'...")
         shutil.copytree(args.restore_dir, logs_path)
+    if args.pretrain and args.pretrain != "og":
+        logging.info(f"Preparing download links for {args.pretrain}...")
+        args.pretrain_g, args.pretrain_d = get_pretrain_links(
+            args.pretrain, args.sample_rate
+        )
     if args.train and args.pretrain_g:
-        G_PATH = "pretrain_G.pth"
-        D_PATH = "pretrain_D.pth"
-        logging.info("Downloading custom generator...")
-        p = subprocess.run(["wget", "-O", G_PATH, args.pretrain_g])
-        p.check_returncode()
-        logging.info("Downloading custom discriminator...")
-        p = subprocess.run(["wget", "-O", D_PATH, args.pretrain_d])
-        p.check_returncode()
-    CMD_BASE = ["uv", "run", "core.py"]
+        if os.path.isfile(args.pretrain_g):
+            g_path = args.pretrain_g
+        else:
+            g_path = "pretrain_G.pth"
+            logging.info("Downloading custom generator...")
+            p = subprocess.run(["wget", "-O", g_path, args.pretrain_g])
+            p.check_returncode()
+
+        if os.path.isfile(args.pretrain_d):
+            d_path = args.pretrain_d
+        else:
+            d_path = "pretrain_D.pth"
+            logging.info("Downloading custom discriminator...")
+            p = subprocess.run(["wget", "-O", d_path, args.pretrain_d])
+            p.check_returncode()
+    if is_windows():
+        CMD_BASE = ["env/python.exe", "core.py"]
+    else:
+        CMD_BASE = ["uv", "run", "core.py"]
     if args.preprocess:
         cmd_preprocess = CMD_BASE + [
             "preprocess",
@@ -201,9 +247,9 @@ def main():
             cmd_train += [
                 "--custom_pretrained=True",
                 "--g_pretrained_path",
-                G_PATH,
+                g_path,
                 "--d_pretrained_path",
-                D_PATH,
+                d_path,
             ]
         logging.info("Training...")
         p = subprocess.run(cmd_train)
